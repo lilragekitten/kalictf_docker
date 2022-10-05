@@ -1,0 +1,19 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  ctf:
+    container_name: kalictf
+    image: cottontail/ctf:latest
+    cap_add:
+      - SYS_PTRACE
+    init: true
+    build:
+      context: "."
+      dockerfile: kalictf.Dockerfile
+    tty: true
+    user: "ctf"
+    ports:
+      - "127.0.0.1:3390:3390"
+    volumes:
+      - ctfvolume01:/data/ctfs
+volumes:
+  ctfvolume01: {}
