@@ -91,6 +91,13 @@ RUN wget https://github.com/io12/pwninit/releases/download/3.2.0/pwninit && \
   mv ./pwninit /usr/local/bin/.  && \
   chmod +x /usr/local/bin/pwninit
 
+# Install ghidra
+RUN wget https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.1.5_build/ghidra_10.1.5_PUBLIC_20220726.zip && \
+  unzip ghidra_10.1.5_PUBLIC_20220726.zip -d /opt && \
+  ln -s /opt/ghidra_10.1.5_PUBLIC /opt/ghidra && \
+  chown -R ${CTFID}:${CTFID} /opt/ghidra* && \
+  rm -f ghidra_10.1.5_PUBLIC_20220726.zip
+
 # Setup and run xrdp
 RUN sed -i "\
   s/port=3389/port=3390/g \
@@ -114,7 +121,7 @@ RUN addgroup --gid ${CTFID} ${CTFUSER} && \
   echo "${CTFUSER}:${CTFPASS}" | chpasswd
 
 # Fix static directory and home folder permissions
-RUN chown -R root:${CTFID} ${HOME}
+RUN chown -R ${CTFID}:${CTFID} ${HOME}
 
 # User setup and linking of the ctf directory
 USER ${CTFUSER}
