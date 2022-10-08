@@ -3,6 +3,8 @@ services:
   ctf:
     container_name: kalictf
     image: cottontail/ctf:latest
+    security_opt:
+      - seccomp:unconfined
     cap_add:
       - SYS_PTRACE
     init: true
@@ -10,10 +12,8 @@ services:
       context: "."
       dockerfile: kalictf.Dockerfile
     tty: true
-    user: "ctf"
+    user: "1000:1000"
     ports:
       - "127.0.0.1:3390:3390"
     volumes:
-      - ctfvolume01:/data/ctfs
-volumes:
-  ctfvolume01: {}
+      - /home/cottontail/ctfs:/home/ctf/ctfs:rw

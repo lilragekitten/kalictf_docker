@@ -4,54 +4,58 @@ LABEL maintainer="Rachel Snyder <zizzixsec@gmail.com>"
 
 #ARGS
 ARG CTFUSER="ctf"
-ARG CTFDIR="/data/ctfs"
+ARG CTFPASS="ctf"
+ARG CTFID="1000"
 
 # Environment Variables
 ENV DEBIAN_FRONTEND noninteractive
 ENV TZ America/Chicago
+ENV SHELL "/bin/zsh"
 ENV HOME "/home/${CTFUSER}"
 
 # Install base packages
 RUN dpkg --add-architecture i386 && \
   apt update && \
   apt install -y \
-    locales \
-    build-essential \
-    lib32z1 \
-    default-jdk \
-    default-jre \
+    netcat-traditional \
     kali-desktop-xfce \
-    iputils-ping \
+    build-essential \
     python-is-python3 \
     python3-pip \
     python3-dev \
+    default-jdk \
+    default-jre \
+    lib32z1 \
+    iputils-ping \
     libssl-dev \
     libffi-dev \
-    patchelf \
-    elfutils \
-    cargo \
-    ruby \
-    ruby-dev \
-    xorg \
-    xrdp \
-    wget \
-    vim \
-    git \
-    tmux \
-    strace \
-    ltrace \
-    nasm \
-    netcat-traditional \
     socat \
-    file \
-    tzdata \
     seclists \
     wordlists \
     gobuster \
-    burpsuite --fix-missing && \
-  apt -qy autoremove && \
-  apt clean && \
-  rm -rf /var/lib/apt/list/*
+    burpsuite \
+    patchelf \
+    elfutils \
+    strace \
+    ltrace \
+    locales \
+    tzdata \
+    cargo \
+    ruby \
+    ruby-dev \
+    wget \
+    curl \
+    nasm \
+    vim \
+    git \
+    tmux \
+    file \
+    xorg \
+    xrdp \
+    zsh --fix-missing && \
+    apt -qy autoremove && \
+    apt clean && \
+    rm -rf /var/lib/apt/list/*
 
 # Fix timezone
 RUN ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && \
@@ -104,20 +108,17 @@ RUN ln -sf /dev/stdout /var/log/xrdp-sesman.log
 # Disable root login
 RUN chsh -s /usr/sbin/nologin root
 
-# Setup the CTF user with password "CTFpwn1@"
-ARG CTFPASS='$6$efWj/LSJud4AWipG$kdEuEMqDI38XuCkff/qgZOXdfRP3vJUuO5yLef/T7qFDdHzfChm8bYq.qMGxSGkq0mm2biqBZu.N2OouF1W2H.'
-RUN useradd -m -s /bin/bash -p ${CTFPASS} ${CTFUSER}
-RUN usermod -aG sudo ${CTFUSER}
+# Setup the CTF user
+RUN addgroup --gid ${CTFID} ${CTFUSER} && \
+  useradd -m -d ${HOME} -s ${SHELL} --uid ${CTFID} --gid ${CTFID} -G sudo ${CTFUSER} && \
+  echo "${CTFUSER}:${CTFPASS}" | chpasswd
 
 # Fix static directory and home folder permissions
-RUN mkdir -p ${CTFDIR}
-RUN chown -R ${CTFUSER}:${CTFUSER} ${CTFDIR}
-RUN chown -R ${CTFUSER}:${CTFUSER} ${HOME}
+RUN chown -R root:${CTFID} ${HOME}
 
 # User setup and linking of the ctf directory
 USER ${CTFUSER}
 WORKDIR ${HOME}
-RUN ln -s ${CTFDIR} ${HOME}/ctfs
 
 # Setup VIM
 RUN echo '\
@@ -128,4 +129,4 @@ set shiftwidth=4\n\
 set expandtab\n\
 ' >> ${HOME}/.vimrc
 
-CMD ["bash"]
+ENTRYPOINT [ "/bin/bash" ]
