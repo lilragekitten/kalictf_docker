@@ -10,6 +10,9 @@ ARG CTFID="1000"
 # Environment Variables
 ENV DEBIAN_FRONTEND noninteractive
 ENV TZ America/Chicago
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
+ENV LC_ALL en_US.UTF-8
 ENV SHELL "/bin/zsh"
 ENV HOME "/home/${CTFUSER}"
 
@@ -58,15 +61,12 @@ RUN dpkg --add-architecture i386 && \
     rm -rf /var/lib/apt/list/*
 
 # Fix timezone
-RUN ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && \
+RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime && \
   dpkg-reconfigure -f noninteractive tzdata
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
-    locale-gen
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en  
-ENV LC_ALL en_US.UTF-8  
+    locale-gen  
 
 # Python modules
 RUN python3 -m pip install -U pip && \
