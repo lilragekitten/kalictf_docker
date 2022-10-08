@@ -13,7 +13,7 @@ $ groupadd -g 100999 docker-share && \
  - Then create the directory you want to share and change ownership to `<your user>:<the new 100999 group>`
 
 ```bash
-$ mkdir -p ~/ctfs && chown -R $USER:docker-share ~/ctfs
+$ mkdir -p ~/tools && chown -R $USER:docker-share ~/tools
 ```
 ---
 ### How to build and start the container:

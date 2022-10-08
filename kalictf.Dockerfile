@@ -6,6 +6,7 @@ LABEL maintainer="Rachel Snyder <zizzixsec@gmail.com>"
 ARG CTFUSER="ctf"
 ARG CTFPASS="ctf"
 ARG CTFID="1000"
+ARG CTFDIR="/mnt/ctfs"
 
 # Environment Variables
 ENV DEBIAN_FRONTEND noninteractive
@@ -120,12 +121,17 @@ RUN addgroup --gid ${CTFID} ${CTFUSER} && \
   useradd -m -d ${HOME} -s ${SHELL} --uid ${CTFID} --gid ${CTFID} -G sudo ${CTFUSER} && \
   echo "${CTFUSER}:${CTFPASS}" | chpasswd
 
-# Fix static directory and home folder permissions
-RUN chown -R ${CTFID}:${CTFID} ${HOME}
+# Add data directory and update non-root permissions
+RUN mkdir -p ${CTFDIR} ${HOME}/tools && \
+  chown -R ${CTFUSER}:${CTFUSER} ${CTFDIR} && \
+  chown -R ${CTFID}:${CTFID} ${HOME} && \
+  chown -R root ${HOME}/tools
 
 # User setup and linking of the ctf directory
 USER ${CTFUSER}
 WORKDIR ${HOME}
+
+RUN ln -s ${CTFDIR} ${HOME}/ctfs
 
 # Setup VIM
 RUN echo '\

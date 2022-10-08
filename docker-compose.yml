@@ -16,4 +16,7 @@ services:
     ports:
       - "127.0.0.1:3390:3390"
     volumes:
-      - /home/cottontail/ctfs:/home/ctf/ctfs:rw
+      - /home/cottontail/Tools:/home/ctf/tools:rw
+      - kalictfdata:/mnt/ctfs
+volumes:
+  kalictfdata: {}
