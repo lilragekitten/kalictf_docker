@@ -5,21 +5,16 @@ LABEL maintainer="Rachel Snyder <zizzixsec@gmail.com>"
 #ARGS
 ARG CTFUSER="ctf"
 ARG CTFPASS="ctf"
-ARG CTFID="1000"
-ARG CTFDIR="/mnt/ctfs"
 
 # Environment Variables
 ENV DEBIAN_FRONTEND noninteractive
 ENV TZ America/Chicago
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en  
-ENV LC_ALL en_US.UTF-8
-ENV SHELL "/bin/zsh"
+ENV USER ${CTFUSER}
+ENV SHELL "/bin/bash"
 ENV HOME "/home/${CTFUSER}"
 
 # Install base packages
-RUN dpkg --add-architecture i386 && \
-  apt update && \
+RUN apt update && \
   apt install -y \
     netcat-traditional \
     kali-desktop-xfce \
@@ -29,8 +24,6 @@ RUN dpkg --add-architecture i386 && \
     python3-dev \
     default-jdk \
     default-jre \
-    lib32z1 \
-    iputils-ping \
     libssl-dev \
     libffi-dev \
     socat \
@@ -55,8 +48,7 @@ RUN dpkg --add-architecture i386 && \
     tmux \
     file \
     xorg \
-    xrdp \
-    zsh --fix-missing && \
+    xrdp --fix-missing && \
     apt -qy autoremove && \
     apt clean && \
     rm -rf /var/lib/apt/list/*
@@ -87,18 +79,6 @@ RUN gem install one_gadget seccomp-tools && \
 RUN git clone --depth 1 https://github.com/pwndbg/pwndbg && \
   cd pwndbg && chmod +x setup.sh && ./setup.sh
 
-# Install pwninit
-RUN wget https://github.com/io12/pwninit/releases/download/3.2.0/pwninit && \
-  mv ./pwninit /usr/local/bin/.  && \
-  chmod +x /usr/local/bin/pwninit
-
-# Install ghidra
-RUN wget https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.1.5_build/ghidra_10.1.5_PUBLIC_20220726.zip && \
-  unzip ghidra_10.1.5_PUBLIC_20220726.zip -d /opt && \
-  ln -s /opt/ghidra_10.1.5_PUBLIC /opt/ghidra && \
-  chown -R ${CTFID}:${CTFID} /opt/ghidra* && \
-  rm -f ghidra_10.1.5_PUBLIC_20220726.zip
-
 # Setup and run xrdp
 RUN sed -i "\
   s/port=3389/port=3390/g \
@@ -117,21 +97,17 @@ RUN ln -sf /dev/stdout /var/log/xrdp-sesman.log
 RUN chsh -s /usr/sbin/nologin root
 
 # Setup the CTF user
-RUN addgroup --gid ${CTFID} ${CTFUSER} && \
-  useradd -m -d ${HOME} -s ${SHELL} --uid ${CTFID} --gid ${CTFID} -G sudo ${CTFUSER} && \
+RUN useradd -m -d ${HOME} -s ${SHELL} -G sudo ${CTFUSER} && \
   echo "${CTFUSER}:${CTFPASS}" | chpasswd
 
-# Add data directory and update non-root permissions
-RUN mkdir -p ${CTFDIR} ${HOME}/tools && \
-  chown -R ${CTFUSER}:${CTFUSER} ${CTFDIR} && \
-  chown -R ${CTFID}:${CTFID} ${HOME} && \
-  chown -R root ${HOME}/tools
+RUN chown -R ${CTFUSER}:${CTFUSER} ${HOME}
 
 # User setup and linking of the ctf directory
 USER ${CTFUSER}
 WORKDIR ${HOME}
 
-RUN ln -s ${CTFDIR} ${HOME}/ctfs
+RUN ln -s /mnt/ctfs ctfs && \
+  ln -s /mnt/tools tools
 
 # Setup VIM
 RUN echo '\
@@ -141,5 +117,16 @@ set tabstop=4\n\
 set shiftwidth=4\n\
 set expandtab\n\
 ' >> ${HOME}/.vimrc
+
+RUN echo '\
+export PYTHONIOENCODING=UTF-8 \
+export LC_ALL=en_US.UTF-8 \
+export LANG=en_US.UTF-8 \  
+export LANGUAGE=en_US \
+' >> ${HOME}/.bashrc
+
+RUN echo '\
+source /pwndbg/gdbinit.py \
+' >> ${HOME}/.gdbinit
 
 ENTRYPOINT [ "/bin/bash" ]
